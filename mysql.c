@@ -10,7 +10,7 @@ main() {
    char *server = "localhost";
    char *user = "root";
    char *password = "password"; /* set me first */
-   char *database = "mysql";
+   char *database = "environment";
 
    conn = mysql_init(NULL);
 
@@ -21,18 +21,29 @@ main() {
       exit(1);
    }
 
-   /* send SQL query */
-   if (mysql_query(conn, "show tables")) {
+
+   /* insert data to database */
+   if (mysql_query(conn, "INSERT INTO `enviroment` (`id`, `temperature`, `humidity`, `created`) VALUES (NULL, '30.12', '50.0', '2016-11-16 14:55:00');")) {
       fprintf(stderr, "%s\n", mysql_error(conn));
       exit(1);
-   }
+   } 
+   
+
+
+   /* send SQL query */
+   /*if (mysql_query(conn, "show tables")) {
+      fprintf(stderr, "%s\n", mysql_error(conn));
+      exit(1);
+   } */
 
    res = mysql_use_result(conn);
 
    /* output table name */
-   printf("MySQL Tables in mysql database:\n");
+   /*printf("MySQL Tables in mysql database:\n");
    while ((row = mysql_fetch_row(res)) != NULL)
       printf("%s \n", row[0]);
+
+   */
 
    /* close connection */
    mysql_free_result(res);
