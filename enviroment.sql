@@ -26,7 +26,7 @@ SET time_zone = "+00:00";
 -- Table structure for table `enviroment`
 --
 
-CREATE TABLE `enviroment` (
+CREATE TABLE `environment` (
   `id` int(11) NOT NULL,
   `temperature` float NOT NULL,
   `humidity` float NOT NULL,
@@ -38,9 +38,9 @@ CREATE TABLE `enviroment` (
 --
 
 --
--- Indexes for table `enviroment`
+-- Indexes for table `environment`
 --
-ALTER TABLE `enviroment`
+ALTER TABLE `environment`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -48,9 +48,9 @@ ALTER TABLE `enviroment`
 --
 
 --
--- AUTO_INCREMENT for table `enviroment`
+-- AUTO_INCREMENT for table `environment`
 --
-ALTER TABLE `enviroment`
+ALTER TABLE `environment`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
