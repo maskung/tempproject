@@ -1,6 +1,12 @@
-/* Simple C program that connects to MySQL Database server*/
-#include <mysql.h>
+/*
+ *      dht22.c:
+ *	Simple test program to test the wiringPi functions
+ *	Based on the existing dht11.c
+ *	Amended by technion@lolware.net
+ */
+
 #include <wiringPi.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -8,14 +14,10 @@
 #include <unistd.h>
 
 #include "locking.h"
-#include "daemon.h"
 
 #define MAXTIMINGS 85
 static int DHTPIN = 7;
 static int dht22_dat[5] = {0,0,0,0,0};
-
-float temp = 0;
-float humid = 0;
 
 static uint8_t sizecvt(const int read)
 {
@@ -86,11 +88,7 @@ static int read_dht22_dat()
         if ((dht22_dat[2] & 0x80) != 0)  t *= -1;
 
 
-    //printf("Humidity = %.2f %% Temperature = %.2f *C \n", h, t );
-    //put temperature and humidity to out side function 
-    temp = t;
-    humid = h;
-
+    printf("Humidity = %.2f %% Temperature = %.2f *C \n", h, t );
     return 1;
   }
   else
@@ -100,91 +98,45 @@ static int read_dht22_dat()
   }
 }
 
-
-main() {
-
+int main (int argc, char *argv[])
+{
   int lockfd;
   int tries = 100;
 
-   MYSQL *conn;
-   MYSQL_RES *res;
-   MYSQL_ROW row;
+  if (argc < 2)
+    printf ("usage: %s <pin> \n pin is the wiringPi pin number\nusing 7 (GPIO 4) default",argv[0]);
+  else
+    DHTPIN = atoi(argv[1]);
+   
 
-   char *server = "localhost";
-   char *user = "root";
-   char *password = "password"; /* set me first */
-   char *database = "environment";
-   char sql[255];
+  if (argc == 3)
+    tries = atoi(argv[2]);
 
-
-  log_message(LOG_FILE,"Setup wiring PI\n");
-  if (wiringPiSetup () == -1)
-    exit(EXIT_FAILURE) ;
-
-  if (setuid(getuid()) < 0)
-  {
-    //perror("Dropping privileges failed\n");
-    log_message(LOG_FILE,"Dropping privileges failed\n");
+  if (tries < 1) {
+    printf("Invalid tries supplied\n");
     exit(EXIT_FAILURE);
   }
 
- 
-  daemonize();
-   log_message(LOG_FILE,"connect MySQL\n");
-   conn = mysql_init(NULL);
+  printf ("Raspberry Pi wiringPi DHT22 reader by Suphanut\n") ;
 
-   /* Connect to database */
-   if (!mysql_real_connect(conn, server,
-         user, password, database, 0, NULL, 0)) {
-      fprintf(stderr, "%s\n", mysql_error(conn));
-      log_message(LOG_FILE,"MySQL Error connect\n");
-      exit(1);
-   }
+  lockfd = open_lockfile(LOCKFILE);
 
-  log_message(LOG_FILE,"Start Reading Sensor\n");
-  while (1) {
+  if (wiringPiSetup () == -1)
+    exit(EXIT_FAILURE) ;
+	
+  if (setuid(getuid()) < 0)
+  {
+    perror("Dropping privileges failed\n");
+    exit(EXIT_FAILURE);
+  }
 
   while (read_dht22_dat() == 0 && tries--) 
   {
      delay(1000); // wait 1sec to refresh
   }
 
-
-  printf("Humidity = %.2f %% Temperature = %.2f *C \n", humid, temp );
-  //sprintf(sql,"\n", humid, temp );
-
-  sprintf(sql,"INSERT INTO `environment` (`id`, `temperature`, `humidity`, `created`) VALUES (NULL, '%.2f', '%.2f', NOW());", temp, humid);
-
-   /* insert data to database */
-   if (mysql_query(conn, sql)) {
-      fprintf(stderr, "%s\n", mysql_error(conn));
-      log_message(LOG_FILE,"MySQL Error Insert\n");
-      exit(1);
-   } 
-   
-
-
-   /* send SQL query */
-   /*if (mysql_query(conn, "show tables")) {
-      fprintf(stderr, "%s\n", mysql_error(conn));
-      exit(1);
-   } */
-
-   res = mysql_use_result(conn);
-
-   /* output table name */
-   /*printf("MySQL Tables in mysql database:\n");
-   while ((row = mysql_fetch_row(res)) != NULL)
-      printf("%s \n", row[0]);
-
-   */
-   mysql_free_result(res);
-   sleep(300);
-   }
   delay(1500);
   close_lockfile(lockfd);
 
-   /* close connection */
-   mysql_close(conn);
+  return 0 ;
 }
-
